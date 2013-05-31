@@ -9,6 +9,7 @@ and maintain connections.
 """
 
 import socket
+import ssl
 
 from .models import Response
 from .packages.urllib3.poolmanager import PoolManager, ProxyManager
@@ -31,6 +32,7 @@ DEFAULT_RETRIES = 0
 
 
 class BaseAdapter(object):
+
     """The Base Transport Adapter"""
 
     def __init__(self):
@@ -44,6 +46,7 @@ class BaseAdapter(object):
 
 
 class HTTPAdapter(BaseAdapter):
+
     """The built-in HTTP Adapter for urllib3.
 
     Provides a general-case interface for Requests sessions to contact HTTP and
@@ -106,7 +109,8 @@ class HTTPAdapter(BaseAdapter):
         self._pool_block = block
 
         self.poolmanager = PoolManager(num_pools=connections, maxsize=maxsize,
-                                       block=block)
+                                       block=block,
+                                       ssl_version=ssl.PROTOCOL_TLSv3)
 
     def cert_verify(self, conn, url, verify, cert):
         """Verify a SSL certificate. This method should not be called from user
@@ -314,11 +318,11 @@ class HTTPAdapter(BaseAdapter):
 
                 r = low_conn.getresponse()
                 resp = HTTPResponse.from_httplib(r,
-                    pool=conn,
-                    connection=low_conn,
-                    preload_content=False,
-                    decode_content=False
-                )
+                                                 pool=conn,
+                                                 connection=low_conn,
+                                                 preload_content=False,
+                                                 decode_content=False
+                                                 )
 
         except socket.error as sockerr:
             raise ConnectionError(sockerr)
